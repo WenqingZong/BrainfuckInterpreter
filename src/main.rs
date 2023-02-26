@@ -55,6 +55,7 @@ impl fmt::Display for RawInstruction {
 /// A structure to hold the instructions and its locations in file.
 #[derive(Debug)]
 struct Instruction {
+    file: String,
     raw: RawInstruction,
     line: usize,
     col: usize,
@@ -62,6 +63,10 @@ struct Instruction {
 
 impl Instruction {
     /// Some getters.
+    fn file(&self) -> &String {
+        &self.file
+    }
+
     fn raw(&self) -> RawInstruction {
         self.raw
     }
@@ -79,7 +84,8 @@ impl fmt::Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "[inputfile:{}:{}] {}",
+            "[{}:{}:{}] {}",
+            self.file(),
             self.line(),
             self.col(),
             self.raw(),
@@ -96,13 +102,11 @@ fn read_source_file(file_path: &str) -> Result<Vec<Instruction>, Box<dyn std::er
         for (col, char) in line?.chars().enumerate() {
             if let Some(raw_instruction) = RawInstruction::from_char(char) {
                 ins_vec.push(Instruction {
+                    file: file_path.to_owned(),
                     raw: raw_instruction,
                     line: row + 1,
                     col: col + 1,
                 });
-                if cfg!(debug_assertions) {
-                    println!("{:?}", ins_vec.last());
-                }
             }
         }
     }
@@ -111,10 +115,11 @@ fn read_source_file(file_path: &str) -> Result<Vec<Instruction>, Box<dyn std::er
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file_path = env::args().nth(1).ok_or("Please specify an input file")?;
-    let instructions = read_source_file(&file_path);
+    let instructions = read_source_file(&file_path)?;
 
-    for instruction in instructions? {
-        println!("{}", instruction);
+    for instruction in &instructions {
+        println!("{:?}", instruction);
     }
+
     Ok(())
 }
