@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "BrainfuckInterpreter"
+name = "brainfuck_interpreter"
 version = "0.1.0"
