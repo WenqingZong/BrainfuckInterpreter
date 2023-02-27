@@ -3,5 +3,20 @@
 version = 3
 
 [[package]]
+name = "bf_interp"
+version = "0.1.0"
+dependencies = [
+ "bf_types",
+]
+
+[[package]]
+name = "bf_types"
+version = "0.1.0"
+
+[[package]]
 name = "brainfuck_interpreter"
 version = "0.1.0"
+dependencies = [
+ "bf_interp",
+ "bf_types",
+]

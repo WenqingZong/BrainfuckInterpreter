@@ -1,8 +1,14 @@
+[workspace]
+members = [
+    "bf_types",
+    "bf_interp"
+]
+
 [package]
 name = "brainfuck_interpreter"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+bf_types = { path = "./bf_types" }
+bf_interp = { path = "./bf_interp" }
