@@ -66,7 +66,7 @@ where
         if self.pointer == 0 {
             return Err(BrainfuckError::CannotMoveLeftError);
         }
-        self.pointer += 1;
+        self.pointer -= 1;
         Ok(())
     }
 
