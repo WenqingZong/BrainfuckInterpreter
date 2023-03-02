@@ -46,8 +46,10 @@ where
     T: Num + Bounded + AddAssign + SubAssign + Copy + PartialOrd,
 {
     pub fn new(memory_size: Option<NonZeroUsize>, can_extend: bool) -> VM<T> {
+        let mut memory: Vec<T> = Vec::with_capacity(memory_size.unwrap().get());
+        memory.push(T::zero());
         Self {
-            memory: Vec::with_capacity(memory_size.unwrap().get()),
+            memory,
             pointer: 0,
             can_extend,
         }
@@ -63,7 +65,7 @@ where
     }
 
     pub fn move_right(&mut self) -> Result<(), BrainfuckError> {
-        if self.pointer == self.memory.capacity() && !self.can_extend {
+        if self.pointer == self.memory.capacity() - 1 && !self.can_extend {
             return Err(BrainfuckError::CannotMoveRightError);
         } else if self.pointer == self.memory.capacity() - 1 {
             self.memory.reserve_exact(self.memory.len());
