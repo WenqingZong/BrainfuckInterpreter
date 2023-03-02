@@ -4,6 +4,7 @@ use std::error::Error;
 use std::fmt;
 use std::num::NonZeroUsize;
 use std::ops::{AddAssign, SubAssign};
+use bf_types::Program;
 
 #[derive(Debug)]
 pub struct VM<T>
@@ -55,8 +56,13 @@ where
         }
     }
 
+    pub fn interpret(&self, program: &Program) -> Result<(), BrainfuckError> {
+        println!("{}", program);
+        Ok(())
+    }
+
     // Brainfuck instructions (other than loop).
-    pub fn move_left(&mut self) -> Result<(), BrainfuckError> {
+    fn move_left(&mut self) -> Result<(), BrainfuckError> {
         if self.pointer == 0 {
             return Err(BrainfuckError::CannotMoveLeftError);
         }
@@ -64,7 +70,7 @@ where
         Ok(())
     }
 
-    pub fn move_right(&mut self) -> Result<(), BrainfuckError> {
+    fn move_right(&mut self) -> Result<(), BrainfuckError> {
         if self.pointer == self.memory.capacity() - 1 && !self.can_extend {
             return Err(BrainfuckError::CannotMoveRightError);
         } else if self.pointer == self.memory.capacity() - 1 {
@@ -77,7 +83,7 @@ where
         Ok(())
     }
 
-    pub fn increment(&mut self) -> Result<(), BrainfuckError> {
+    fn increment(&mut self) -> Result<(), BrainfuckError> {
         if self.memory[self.pointer] == T::max_value() {
             return Err(BrainfuckError::CannotIncrementError);
         }
@@ -85,7 +91,7 @@ where
         Ok(())
     }
 
-    pub fn decrement(&mut self) -> Result<(), BrainfuckError> {
+    fn decrement(&mut self) -> Result<(), BrainfuckError> {
         if self.memory[self.pointer] == T::min_value() {
             return Err(BrainfuckError::CannotDecrementError);
         }
@@ -93,11 +99,11 @@ where
         Ok(())
     }
 
-    pub fn output(&self) -> Result<T, BrainfuckError> {
+    fn output(&self) -> Result<T, BrainfuckError> {
         Ok(self.memory[self.pointer])
     }
 
-    pub fn input(&mut self, value: T) -> Result<(), BrainfuckError> {
+    fn input(&mut self, value: T) -> Result<(), BrainfuckError> {
         if T::min_value() <= value && value <= T::max_value() {
             self.memory[self.pointer] = value;
             return Ok(());
