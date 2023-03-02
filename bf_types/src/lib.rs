@@ -1,6 +1,5 @@
 use std::fmt;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Lines};
+use std::fs::read_to_string;
 use std::path::Path;
 
 #[derive(Debug, Clone, Copy)]
@@ -77,14 +76,13 @@ impl Instruction {
         self.raw_instruction
     }
 }
+
 impl Program {
-    pub fn new(
-        file_path: &str,
-        lines: Lines<BufReader<File>>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let mut instructions: Vec<Instruction> = Vec::new();
+        let lines = lines.split('\n');
         for (row, line) in lines.enumerate() {
-            for (col, char) in line?.chars().enumerate() {
+            for (col, char) in line.chars().enumerate() {
                 if let Some(raw_instruction) = RawInstruction::from_char(char) {
                     let instruction = Instruction {
                         row: row + 1,
@@ -96,15 +94,18 @@ impl Program {
             }
         }
         Ok(Self {
-            file_path: file_path.to_owned(),
+            file_path: file_path
+                .as_ref()
+                .to_str()
+                .ok_or("Cannot convert to String")?
+                .to_string(),
             instructions,
         })
     }
 
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let file_path = path.as_ref().to_str().ok_or("Converting to &str failed")?;
-        let file = File::open(file_path)?;
-        let lines = BufReader::new(file).lines();
+    pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, Box<dyn std::error::Error>> {
+        let binding = read_to_string(&file_path)?;
+        let lines = binding.as_str();
         Program::new(file_path, lines)
     }
 

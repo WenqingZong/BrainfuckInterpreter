@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 bf_types = { path = "../bf_types" }
+num-traits = "0.2.14"
