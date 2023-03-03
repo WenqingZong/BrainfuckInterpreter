@@ -47,7 +47,11 @@ where
     T: Num + Bounded + AddAssign + SubAssign + Copy + PartialOrd,
 {
     pub fn new(memory_size: Option<NonZeroUsize>, can_extend: bool) -> VM<T> {
-        let mut memory: Vec<T> = Vec::with_capacity(memory_size.unwrap().get());
+        let memory_size = match memory_size {
+            Some(size) => size.get(),
+            None => 30000,
+        };
+        let mut memory: Vec<T> = Vec::with_capacity(memory_size);
         memory.push(T::zero());
         Self {
             memory,
@@ -56,9 +60,8 @@ where
         }
     }
 
-    pub fn interpret(&self, program: &Program) -> Result<(), BrainfuckError> {
+    pub fn interpret(&self, program: &Program) {
         println!("{}", program);
-        Ok(())
     }
 
     // Brainfuck instructions (other than loop).
