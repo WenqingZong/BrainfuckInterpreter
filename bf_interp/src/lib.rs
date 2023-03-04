@@ -1,3 +1,5 @@
+//! Library for Brainfuck virtual machine and the actual interpret functions.
+
 use bf_types::Program;
 use num_traits::{Bounded, Num};
 use std::cmp::PartialOrd;
@@ -6,6 +8,9 @@ use std::fmt;
 use std::num::NonZeroUsize;
 use std::ops::{AddAssign, SubAssign};
 
+/// The Brainfuck virtual machine. The VM can hold data of type T, but T must be a number-like type such as u8, i32.
+/// The VM contains a vector of type T to hold memory, and a pointer to indicate current index. Boolean value
+/// 'can_extend' indicates if the memory is allowed to extend.
 #[derive(Debug)]
 pub struct VM<T>
 where
@@ -16,6 +21,7 @@ where
     can_extend: bool,
 }
 
+/// Brainfuck specific errors we might encounter.
 #[derive(Debug)]
 pub enum BrainfuckError {
     CannotMoveLeftError,
@@ -46,6 +52,14 @@ impl<T> VM<T>
 where
     T: Num + Bounded + AddAssign + SubAssign + Copy + PartialOrd,
 {
+    /// Constructs a new Brainfuck virtual machine and initialize it.
+    /// If the memory_size if None, then the default value 30000 will be used.
+    /// # Example
+    /// ```
+    /// # use bf_interp::*;
+    /// use std::num::NonZeroUsize;
+    /// let virtual_machine:VM<u8> = VM::new(NonZeroUsize::new(100), true);
+    /// ```
     pub fn new(memory_size: Option<NonZeroUsize>, can_extend: bool) -> VM<T> {
         let memory_size = match memory_size {
             Some(size) => size.get(),
@@ -60,6 +74,19 @@ where
         }
     }
 
+    /// Interpret a given Brainfuck program.
+    /// # Example
+    /// ```no_run
+    /// use bf_types::*;
+    /// use bf_interp::*;
+    /// # use std::io;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let program = Program::from_file("./hello_world.bf")?;
+    /// let virtual_machine: VM<u8> = VM::new(None, true);
+    /// virtual_machine.interpret(&program);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn interpret(&self, program: &Program) {
         println!("{}", program);
     }
@@ -114,15 +141,17 @@ where
     //     Err(BrainfuckError::InvalidValueError)
     // }
 
-    // Getters.
+    /// Getter for virtual machine memory slice.
     pub fn memory(&self) -> &[T] {
         &self.memory
     }
 
+    /// Getter for virtual machine pointer.
     pub fn pointer(&self) -> usize {
         self.pointer
     }
 
+    /// Getter for if the virtual can extend its memory.
     pub fn can_extend(&self) -> bool {
         self.can_extend
     }

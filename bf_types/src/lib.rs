@@ -57,7 +57,7 @@ impl RawInstruction {
     /// let increment: char = '+';
     /// let parsed = RawInstruction::from_char(increment);
     /// assert_eq!(parsed, Some(RawInstruction::Increment));
-    /// 
+    ///
     /// let comment: char = 'e';
     /// let parsed = RawInstruction::from_char(comment);
     /// assert_eq!(parsed, None);
@@ -141,10 +141,7 @@ impl Program {
             }
         }
         Self {
-            file_path: file_path
-                .as_ref()
-                .to_string_lossy()
-                .to_string(),
+            file_path: file_path.as_ref().to_string_lossy().to_string(),
             instructions,
         }
     }
@@ -207,45 +204,66 @@ mod tests {
             RawInstruction::EndLoop,
         ];
         let parsed_program = Program::new("file_path", bf_code);
-            for (actual_instruction, expected_instruction) in parsed_program
-                .instructions()
-                .into_iter()
-                .zip(expected.into_iter())
-            {
-                if actual_instruction.raw_instruction() != expected_instruction {
-                    return Err(format!(
-                        "Expects {:?}, but found {:?}",
-                        expected_instruction,
-                        actual_instruction.raw_instruction(),
-                    ));
-                }
+        for (actual_instruction, expected_instruction) in parsed_program
+            .instructions()
+            .into_iter()
+            .zip(expected.into_iter())
+        {
+            if actual_instruction.raw_instruction() != expected_instruction {
+                return Err(format!(
+                    "Expects {:?}, but found {:?}",
+                    expected_instruction,
+                    actual_instruction.raw_instruction(),
+                ));
             }
-                Ok(())
+        }
+        Ok(())
     }
 
     #[test]
     /// Test for correctly parse row and col location of each brainfuck instructions.
     fn parse_locations() -> Result<(), String> {
-        let bf_code = indoc!("
+        let bf_code = indoc!(
+            "
             <>
             some comment
             even comment in another language
             中文+-  
-        ");
+        "
+        );
         let parsed_program = Program::new("file_path", bf_code);
         let expected = vec![
-            Instruction{row: 1, col: 1, raw_instruction: RawInstruction::MoveLeft},
-            Instruction{row: 1, col: 2, raw_instruction: RawInstruction::MoveRight},
-            Instruction{row: 4, col: 3, raw_instruction: RawInstruction::Increment},
-            Instruction{row: 4, col: 4, raw_instruction: RawInstruction::Decrement},
+            Instruction {
+                row: 1,
+                col: 1,
+                raw_instruction: RawInstruction::MoveLeft,
+            },
+            Instruction {
+                row: 1,
+                col: 2,
+                raw_instruction: RawInstruction::MoveRight,
+            },
+            Instruction {
+                row: 4,
+                col: 3,
+                raw_instruction: RawInstruction::Increment,
+            },
+            Instruction {
+                row: 4,
+                col: 4,
+                raw_instruction: RawInstruction::Decrement,
+            },
         ];
-        for (actual_instruction, expected_instruction) in parsed_program.instructions().into_iter().zip(expected.into_iter()) {
+        for (actual_instruction, expected_instruction) in parsed_program
+            .instructions()
+            .into_iter()
+            .zip(expected.into_iter())
+        {
             if *actual_instruction != expected_instruction {
                 return Err(String::from(format!(
                     "Expects {:?}, found {:?}",
-                    expected_instruction,
-                    *actual_instruction
-                )))
+                    expected_instruction, *actual_instruction
+                )));
             }
         }
         Ok(())
