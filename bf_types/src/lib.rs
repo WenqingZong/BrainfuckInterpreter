@@ -206,7 +206,7 @@ mod tests {
         let parsed_program = Program::new("file_path", bf_code);
         for (actual_instruction, expected_instruction) in parsed_program
             .instructions()
-            .into_iter()
+            .iter()
             .zip(expected.into_iter())
         {
             if actual_instruction.raw_instruction() != expected_instruction {
@@ -256,14 +256,14 @@ mod tests {
         ];
         for (actual_instruction, expected_instruction) in parsed_program
             .instructions()
-            .into_iter()
+            .iter()
             .zip(expected.into_iter())
         {
             if *actual_instruction != expected_instruction {
-                return Err(String::from(format!(
+                return Err(format!(
                     "Expects {:?}, found {:?}",
                     expected_instruction, *actual_instruction
-                )));
+                ));
             }
         }
         Ok(())
