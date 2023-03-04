@@ -166,7 +166,7 @@ impl Program {
 
     /// Getter for the list of instructions.
     pub fn instructions(&self) -> &[Instruction] {
-        &self.instructions.as_slice()
+        self.instructions.as_slice()
     }
 }
 

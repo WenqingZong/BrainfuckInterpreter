@@ -88,7 +88,7 @@ where
     /// # }
     /// ```
     pub fn interpret(&self, program: &Program) {
-        println!("{}", program);
+        println!("{program}");
     }
 
     // Brainfuck instructions (other than loop).
