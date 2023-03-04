@@ -1,10 +1,10 @@
+use bf_types::Program;
 use num_traits::{Bounded, Num};
 use std::cmp::PartialOrd;
 use std::error::Error;
 use std::fmt;
 use std::num::NonZeroUsize;
 use std::ops::{AddAssign, SubAssign};
-use bf_types::Program;
 
 #[derive(Debug)]
 pub struct VM<T>
@@ -65,54 +65,54 @@ where
     }
 
     // Brainfuck instructions (other than loop).
-    fn move_left(&mut self) -> Result<(), BrainfuckError> {
-        if self.pointer == 0 {
-            return Err(BrainfuckError::CannotMoveLeftError);
-        }
-        self.pointer -= 1;
-        Ok(())
-    }
+    // fn move_left(&mut self) -> Result<(), BrainfuckError> {
+    //     if self.pointer == 0 {
+    //         return Err(BrainfuckError::CannotMoveLeftError);
+    //     }
+    //     self.pointer -= 1;
+    //     Ok(())
+    // }
 
-    fn move_right(&mut self) -> Result<(), BrainfuckError> {
-        if self.pointer == self.memory.capacity() - 1 && !self.can_extend {
-            return Err(BrainfuckError::CannotMoveRightError);
-        } else if self.pointer == self.memory.capacity() - 1 {
-            self.memory.reserve_exact(self.memory.len());
-            self.memory.push(T::zero());
-        } else if self.pointer == self.memory.len() - 1 {
-            self.memory.push(T::zero());
-        }
-        self.pointer += 1;
-        Ok(())
-    }
+    // fn move_right(&mut self) -> Result<(), BrainfuckError> {
+    //     if self.pointer == self.memory.capacity() - 1 && !self.can_extend {
+    //         return Err(BrainfuckError::CannotMoveRightError);
+    //     } else if self.pointer == self.memory.capacity() - 1 {
+    //         self.memory.reserve_exact(self.memory.len());
+    //         self.memory.push(T::zero());
+    //     } else if self.pointer == self.memory.len() - 1 {
+    //         self.memory.push(T::zero());
+    //     }
+    //     self.pointer += 1;
+    //     Ok(())
+    // }
 
-    fn increment(&mut self) -> Result<(), BrainfuckError> {
-        if self.memory[self.pointer] == T::max_value() {
-            return Err(BrainfuckError::CannotIncrementError);
-        }
-        self.memory[self.pointer] += T::one();
-        Ok(())
-    }
+    // fn increment(&mut self) -> Result<(), BrainfuckError> {
+    //     if self.memory[self.pointer] == T::max_value() {
+    //         return Err(BrainfuckError::CannotIncrementError);
+    //     }
+    //     self.memory[self.pointer] += T::one();
+    //     Ok(())
+    // }
 
-    fn decrement(&mut self) -> Result<(), BrainfuckError> {
-        if self.memory[self.pointer] == T::min_value() {
-            return Err(BrainfuckError::CannotDecrementError);
-        }
-        self.memory[self.pointer] -= T::one();
-        Ok(())
-    }
+    // fn decrement(&mut self) -> Result<(), BrainfuckError> {
+    //     if self.memory[self.pointer] == T::min_value() {
+    //         return Err(BrainfuckError::CannotDecrementError);
+    //     }
+    //     self.memory[self.pointer] -= T::one();
+    //     Ok(())
+    // }
 
-    fn output(&self) -> Result<T, BrainfuckError> {
-        Ok(self.memory[self.pointer])
-    }
+    // fn output(&self) -> Result<T, BrainfuckError> {
+    //     Ok(self.memory[self.pointer])
+    // }
 
-    fn input(&mut self, value: T) -> Result<(), BrainfuckError> {
-        if T::min_value() <= value && value <= T::max_value() {
-            self.memory[self.pointer] = value;
-            return Ok(());
-        }
-        Err(BrainfuckError::InvalidValueError)
-    }
+    // fn input(&mut self, value: T) -> Result<(), BrainfuckError> {
+    //     if T::min_value() <= value && value <= T::max_value() {
+    //         self.memory[self.pointer] = value;
+    //         return Ok(());
+    //     }
+    //     Err(BrainfuckError::InvalidValueError)
+    // }
 
     // Getters.
     pub fn memory(&self) -> &[T] {

@@ -2,7 +2,7 @@ use std::fmt;
 use std::fs::read_to_string;
 use std::path::Path;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RawInstruction {
     MoveLeft,
     MoveRight,
@@ -14,7 +14,7 @@ pub enum RawInstruction {
     EndLoop,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Instruction {
     row: usize,
     col: usize,
@@ -78,7 +78,7 @@ impl Instruction {
 }
 
 impl Program {
-    fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Self {
         let mut instructions: Vec<Instruction> = Vec::new();
         let lines = lines.split('\n');
         for (row, line) in lines.enumerate() {
@@ -93,20 +93,19 @@ impl Program {
                 }
             }
         }
-        Ok(Self {
+        Self {
             file_path: file_path
                 .as_ref()
-                .to_str()
-                .ok_or("Cannot convert to String")?
+                .to_string_lossy()
                 .to_string(),
             instructions,
-        })
+        }
     }
 
     pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, Box<dyn std::error::Error>> {
         let binding = read_to_string(&file_path)?;
         let lines = binding.as_str();
-        Program::new(file_path, lines)
+        Ok(Program::new(file_path, lines))
     }
 
     pub fn file_path(&self) -> &String {
@@ -131,5 +130,66 @@ impl fmt::Display for Program {
             ));
         }
         write!(f, "{}", representation.join("\n"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use indoc::indoc;
+
+    #[test]
+    fn parse_instructions() -> Result<(), String> {
+        let bf_code = "<>+some none bf comments!85\t\n()&\\-[],.";
+        let expected = vec![
+            RawInstruction::MoveLeft,
+            RawInstruction::MoveRight,
+            RawInstruction::Increment,
+            RawInstruction::Decrement,
+            RawInstruction::BeginLoop,
+            RawInstruction::EndLoop,
+        ];
+        let parsed_program = Program::new("file_path", bf_code);
+            for (actual_instruction, expected_instruction) in parsed_program
+                .instructions()
+                .into_iter()
+                .zip(expected.into_iter())
+            {
+                if actual_instruction.raw_instruction() != expected_instruction {
+                    return Err(format!(
+                        "Expects {:?}, but found {:?}",
+                        expected_instruction,
+                        actual_instruction.raw_instruction(),
+                    ));
+                }
+            }
+                Ok(())
+    }
+
+    #[test]
+    fn parse_locations() -> Result<(), String> {
+        let bf_code = indoc!("
+            <>
+            some comment
+            even comment in another language
+            中文+-  
+        ");
+        let parsed_program = Program::new("file_path", bf_code);
+        let expected = vec![
+            Instruction{row: 1, col: 1, raw_instruction: RawInstruction::MoveLeft},
+            Instruction{row: 1, col: 2, raw_instruction: RawInstruction::MoveRight},
+            Instruction{row: 4, col: 3, raw_instruction: RawInstruction::Increment},
+            Instruction{row: 4, col: 4, raw_instruction: RawInstruction::Decrement},
+        ];
+        for (actual_instruction, expected_instruction) in parsed_program.instructions().into_iter().zip(expected.into_iter()) {
+            if *actual_instruction != expected_instruction {
+                return Err(String::from(format!(
+                    "Expects {:?}, found {:?}",
+                    expected_instruction,
+                    *actual_instruction
+                )))
+            }
+        }
+        Ok(())
     }
 }
