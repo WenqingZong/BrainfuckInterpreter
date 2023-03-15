@@ -1,10 +1,10 @@
-//! This library converts text brainfuck code into Rust-understandable format.
+//! Converts text brainfuck code into Rust-understandable format.
 
 use std::fmt;
 use std::fs::read_to_string;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// An enum type to represent the 8 Brainfuck instructions.
+/// A representation of the 8 Brainfuck instructions.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RawInstruction {
     /// Move VM pointer to left.
@@ -32,8 +32,8 @@ pub enum RawInstruction {
     EndLoop,
 }
 
-/// A structure to represent a brainfuck instruction, an instruction consists of its row and col number in source file,
-/// and the instruction type which is defined by enum RawInstruction.
+/// A representation of a brainfuck instruction, an instruction consists of its row and col number in source file,
+/// and the instruction type which is defined by [RawInstruction].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Instruction {
     row: usize,
@@ -41,16 +41,15 @@ pub struct Instruction {
     raw_instruction: RawInstruction,
 }
 
-/// A structure to represent a brainfuck program. A program consists of its source code file name, and a vector of its
-/// instructions.
+/// A representation of a brainfuck program.
 #[derive(Debug)]
 pub struct Program {
-    file_path: String,
+    file_path: PathBuf,
     instructions: Vec<Instruction>,
 }
 
 impl RawInstruction {
-    /// Convert a char to BF instructions. Return type is Option as all brainfuck comment will be converted into None.
+    /// Convert a char value to BF [RawInstruction]. All brainfuck comment will be converted into None.
     /// # Example
     /// ```
     /// # use bf_types::RawInstruction;
@@ -97,7 +96,7 @@ impl fmt::Display for RawInstruction {
 }
 
 impl Instruction {
-    /// Build a new instance of Instruction.
+    /// Build a new instance of [Instruction].
     /// # Example
     /// ```
     /// # use bf_types::*;
@@ -112,24 +111,24 @@ impl Instruction {
         }
     }
 
-    /// Getter for instruction row number.
+    /// Getter.
     pub fn row(&self) -> usize {
         self.row
     }
 
-    /// Getter for instruction col number.
+    /// Getter.
     pub fn col(&self) -> usize {
         self.col
     }
 
-    /// Getter for instruction enum type.
+    /// Getter.
     pub fn raw_instruction(&self) -> RawInstruction {
         self.raw_instruction
     }
 }
 
 impl Program {
-    /// Creates a brainfuck Program with a file name in a path-like format and its content in a string-ike format.
+    /// Creates a brainfuck [Program] with a file name in a path-like format and its content in a string-like format.
     fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Self {
         let mut instructions: Vec<Instruction> = Vec::new();
         let lines = lines.split('\n');
@@ -141,30 +140,30 @@ impl Program {
             }
         }
         Self {
-            file_path: file_path.as_ref().to_string_lossy().to_string(),
+            file_path: file_path.as_ref().to_owned(),
             instructions,
         }
     }
 
-    /// Creates a brainfuck Program from a file, which is specified as a path-like.
+    /// Creates a brainfuck [Program] from a file, which is specified as a path-like.
     /// # Example
     /// ```no_run
     /// # use bf_types;
     /// let file_path = "./hello_world.bf";
     /// let program = bf_types::Program::from_file(file_path);
     /// ```
-    pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, std::io::Error> {
         let binding = read_to_string(&file_path)?;
         let lines = binding.as_str();
         Ok(Program::new(file_path, lines))
     }
 
-    /// Getter for file path.
-    pub fn file_path(&self) -> &String {
+    /// Getter.
+    pub fn file_path(&self) -> &Path {
         &self.file_path
     }
 
-    /// Getter for the list of instructions.
+    /// Getter.
     pub fn instructions(&self) -> &[Instruction] {
         self.instructions.as_slice()
     }
@@ -172,17 +171,17 @@ impl Program {
 
 impl fmt::Display for Program {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut representation: Vec<String> = Vec::new();
-        representation.push(format!("File: {}", self.file_path()));
-        for &instruction in self.instructions() {
-            representation.push(format!(
-                "Row: {}, Col: {}: {}",
-                instruction.row(),
-                instruction.col(),
-                instruction.raw_instruction()
-            ));
+        for ins in self.instructions() {
+            writeln!(
+                f,
+                "[{}:{}:{}] {}",
+                self.file_path().display(),
+                ins.row(),
+                ins.col(),
+                ins.raw_instruction()
+            )?;
         }
-        write!(f, "{}", representation.join("\n"))
+        Ok(())
     }
 }
 
@@ -191,7 +190,7 @@ mod tests {
     use super::*;
     use indoc::indoc;
 
-    /// Test for correctly parse brainfuck code into corresponding enum type.
+    /// Should correctly parse brainfuck code into corresponding [RawInstruction].
     #[test]
     fn parse_instructions() -> Result<(), String> {
         let bf_code = "<>+some none bf comments!85\t\n()&\\-[],.";
@@ -221,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    /// Test for correctly parse row and col location of each brainfuck instructions.
+    /// Should correctly parse row and col location of each brainfuck [Instruction]s.
     fn parse_locations() -> Result<(), String> {
         let bf_code = indoc!(
             "

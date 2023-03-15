@@ -1,4 +1,4 @@
-//! Library for Brainfuck virtual machine and the actual interpret functions.
+//! A representation of Brainfuck virtual machine and the actual interpret functions.
 
 use bf_types::Program;
 use num_traits::{Bounded, Num};
@@ -8,9 +8,7 @@ use std::fmt;
 use std::num::NonZeroUsize;
 use std::ops::{AddAssign, SubAssign};
 
-/// The Brainfuck virtual machine. The VM can hold data of type T, but T must be a number-like type such as u8, i32.
-/// The VM contains a vector of type T to hold memory, and a pointer to indicate current index. Boolean value
-/// 'can_extend' indicates if the memory is allowed to extend.
+/// The Brainfuck virtual machine. It can hold data of type T, but T must be a number-like type such as [u8], [i32].
 #[derive(Debug)]
 pub struct VM<T>
 where
@@ -52,8 +50,12 @@ impl<T> VM<T>
 where
     T: Num + Bounded + AddAssign + SubAssign + Copy + PartialOrd,
 {
-    /// Constructs a new Brainfuck virtual machine and initialize it.
-    /// If the memory_size if None, then the default value 30000 will be used.
+    /// Constructs a new Brainfuck [VM] and initialize it.
+    ///
+    /// `memory_size` specifies how much cells the [VM] memory can hold, and it will use the default value `30,000` if
+    /// `None` is provided.
+    ///
+    /// `can_extend` specifies if the memory can extend when it's full.
     /// # Example
     /// ```
     /// # use bf_interp::*;
@@ -65,8 +67,8 @@ where
             Some(size) => size.get(),
             None => 30000,
         };
-        let mut memory: Vec<T> = Vec::with_capacity(memory_size);
-        memory.push(T::zero());
+        let mut memory: Vec<T> = vec![];
+        memory.resize(memory_size, T::zero());
         Self {
             memory,
             pointer: 0,
@@ -74,7 +76,7 @@ where
         }
     }
 
-    /// Interpret a given Brainfuck program.
+    /// Interpret a given Brainfuck [Program].
     /// # Example
     /// ```no_run
     /// use bf_types::*;
@@ -141,18 +143,44 @@ where
     //     Err(BrainfuckError::InvalidValueError)
     // }
 
-    /// Getter for virtual machine memory slice.
+    /// Getter.
     pub fn memory(&self) -> &[T] {
         &self.memory
     }
 
-    /// Getter for virtual machine pointer.
+    /// Getter.
     pub fn pointer(&self) -> usize {
         self.pointer
     }
 
-    /// Getter for if the virtual can extend its memory.
+    /// Getter.
     pub fn can_extend(&self) -> bool {
         self.can_extend
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Should create a VM with default `30,000` cells in memory.
+    #[test]
+    fn default_memory_size() {
+        let virtual_machine: VM<u8> = VM::new(None, true);
+        assert_eq!(virtual_machine.memory().len(), 30000);
+    }
+
+    /// Should create a VM with specified number of cells in memory.
+    #[test]
+    fn specified_memory_size() {
+        let virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(10), true);
+        assert_eq!(virtual_machine.memory().len(), 10);
+    }
+
+    /// Should initialize pointer location to 0.
+    #[test]
+    fn initialize_pointer_locaction() {
+        let virtual_machine: VM<u8> = VM::new(None, true);
+        assert_eq!(virtual_machine.pointer(), 0);
     }
 }
