@@ -12,3 +12,4 @@ edition = "2021"
 [dependencies]
 bf_types = { path = "./bf_types" }
 bf_interp = { path = "./bf_interp" }
+clap = { version = "4.1.9", features = ["derive"] }

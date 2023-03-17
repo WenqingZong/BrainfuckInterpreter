@@ -60,15 +60,11 @@ where
     /// ```
     /// # use bf_interp::*;
     /// use std::num::NonZeroUsize;
-    /// let virtual_machine:VM<u8> = VM::new(NonZeroUsize::new(100), true);
+    /// let virtual_machine:VM<u8> = VM::new(NonZeroUsize::new(100).unwrap(), true);
     /// ```
-    pub fn new(memory_size: Option<NonZeroUsize>, can_extend: bool) -> VM<T> {
-        let memory_size = match memory_size {
-            Some(size) => size.get(),
-            None => 30000,
-        };
+    pub fn new(memory_size: NonZeroUsize, can_extend: bool) -> VM<T> {
         let mut memory: Vec<T> = vec![];
-        memory.resize(memory_size, T::zero());
+        memory.resize(memory_size.get(), T::zero());
         Self {
             memory,
             pointer: 0,
@@ -81,10 +77,12 @@ where
     /// ```no_run
     /// use bf_types::*;
     /// use bf_interp::*;
+    /// use std::num::NonZeroUsize;
     /// # use std::io;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let program = Program::from_file("./hello_world.bf")?;
-    /// let virtual_machine: VM<u8> = VM::new(None, true);
+    /// let memory_size = NonZeroUsize::new(30000).unwrap();
+    /// let virtual_machine: VM<u8> = VM::new(memory_size, true);
     /// virtual_machine.interpret(&program);
     /// # Ok(())
     /// # }
@@ -163,24 +161,17 @@ where
 mod tests {
     use super::*;
 
-    /// Should create a VM with default `30,000` cells in memory.
-    #[test]
-    fn default_memory_size() {
-        let virtual_machine: VM<u8> = VM::new(None, true);
-        assert_eq!(virtual_machine.memory().len(), 30000);
-    }
-
     /// Should create a VM with specified number of cells in memory.
     #[test]
     fn specified_memory_size() {
-        let virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(10), true);
+        let virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(10).unwrap(), true);
         assert_eq!(virtual_machine.memory().len(), 10);
     }
 
     /// Should initialize pointer location to 0.
     #[test]
-    fn initialize_pointer_locaction() {
-        let virtual_machine: VM<u8> = VM::new(None, true);
+    fn initialize_pointer_location() {
+        let virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(10).unwrap(), true);
         assert_eq!(virtual_machine.pointer(), 0);
     }
 }
