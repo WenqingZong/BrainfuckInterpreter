@@ -21,7 +21,7 @@ where
 
 /// Brainfuck specific errors we might encounter.
 #[derive(Debug)]
-pub enum BrainfuckError {
+pub enum BrainfuckRuntimeError {
     CannotMoveLeftError,
     CannotMoveRightError,
     CannotIncrementError,
@@ -29,22 +29,28 @@ pub enum BrainfuckError {
     InvalidValueError,
 }
 
-impl fmt::Display for BrainfuckError {
+impl fmt::Display for BrainfuckRuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BrainfuckError::CannotMoveLeftError => write!(f, "Pointer at position 0."),
-            BrainfuckError::CannotMoveRightError => write!(
+            BrainfuckRuntimeError::CannotMoveLeftError => write!(f, "Pointer at position 0."),
+            BrainfuckRuntimeError::CannotMoveRightError => write!(
                 f,
                 "Pointer at right edge and cannot extend virtual machine memory."
             ),
-            BrainfuckError::CannotIncrementError => write!(f, "Current value is max of type T."),
-            BrainfuckError::CannotDecrementError => write!(f, "Current value is min of type T."),
-            BrainfuckError::InvalidValueError => write!(f, "Input value is outside of range T."),
+            BrainfuckRuntimeError::CannotIncrementError => {
+                write!(f, "Current value is max of type T.")
+            }
+            BrainfuckRuntimeError::CannotDecrementError => {
+                write!(f, "Current value is min of type T.")
+            }
+            BrainfuckRuntimeError::InvalidValueError => {
+                write!(f, "Input value is outside of range T.")
+            }
         }
     }
 }
 
-impl Error for BrainfuckError {}
+impl Error for BrainfuckRuntimeError {}
 
 impl<T> VM<T>
 where

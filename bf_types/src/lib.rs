@@ -1,5 +1,6 @@
 //! Converts text brainfuck code into Rust-understandable format.
 
+use std::error::Error;
 use std::fmt;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
@@ -46,6 +47,22 @@ pub struct Instruction {
 pub struct Program {
     file_path: PathBuf,
     instructions: Vec<Instruction>,
+}
+
+/// A representation for errors caused by incompatible brackets in Brainfuck source code.
+#[derive(Debug)]
+pub enum IncompatibleBracket {
+    /// A close bracket has no corresponding open bracket.
+    MissingOpenBracket {
+        file_path: PathBuf,
+        close_bracket: Instruction,
+    },
+
+    /// An open bracket has no corresponding close bracket.
+    MissingCloseBracket {
+        file_path: PathBuf,
+        open_bracket: Instruction,
+    },
 }
 
 impl RawInstruction {
@@ -128,7 +145,7 @@ impl Instruction {
 }
 
 impl Program {
-    /// Creates a brainfuck [Program] with a file name in a path-like format and its content in a string-like format.
+    /// Creates a Brainfuck [Program] with a file name in a path-like format and its content in a string-like format.
     fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Self {
         let mut instructions: Vec<Instruction> = Vec::new();
         let lines = lines.split('\n');
@@ -145,17 +162,59 @@ impl Program {
         }
     }
 
-    /// Creates a brainfuck [Program] from a file, which is specified as a path-like.
+    /// Creates a Brainfuck [Program] from a file, which is specified as a path-like.
     /// # Example
     /// ```no_run
-    /// # use bf_types;
+    /// # use bf_types::*;
     /// let file_path = "./hello_world.bf";
-    /// let program = bf_types::Program::from_file(file_path);
+    /// let program = Program::from_file(file_path);
     /// ```
     pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, std::io::Error> {
         let binding = read_to_string(&file_path)?;
         let lines = binding.as_str();
         Ok(Program::new(file_path, lines))
+    }
+
+    /// Check if a piece of Brainfuck [Program] is valid. I.e., if it has a matching brackets.
+    /// # Example
+    /// ```no_run
+    /// use bf_types::*;
+    /// # use std::io;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let program = Program::from_file("./hello_world.bf")?;
+    /// program.validate()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn validate(&self) -> Result<(), IncompatibleBracket> {
+        let mut stack: Vec<&Instruction> = Vec::with_capacity(self.instructions().len());
+        for (_idx, ins) in self.instructions().iter().enumerate() {
+            if ins.raw_instruction() == RawInstruction::BeginLoop {
+                stack.push(ins);
+            } else if ins.raw_instruction() == RawInstruction::EndLoop {
+                if stack.is_empty() {
+                    eprintln!(
+                        "Found ']' at [{}:{}:{}], but no matching '[' found",
+                        self.file_path().display(),
+                        ins.row(),
+                        ins.col()
+                    );
+                    return Err(IncompatibleBracket::MissingOpenBracket {
+                        file_path: self.file_path().to_owned(),
+                        close_bracket: *ins,
+                    });
+                }
+                stack.pop();
+            }
+        }
+        if !stack.is_empty() {
+            let ins = stack.pop().unwrap();
+            return Err(IncompatibleBracket::MissingCloseBracket {
+                file_path: self.file_path().to_owned(),
+                open_bracket: *ins,
+            });
+        }
+        Ok(())
     }
 
     /// Getter.
@@ -184,6 +243,39 @@ impl fmt::Display for Program {
         Ok(())
     }
 }
+
+impl fmt::Display for IncompatibleBracket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IncompatibleBracket::MissingOpenBracket {
+                file_path,
+                close_bracket,
+            } => {
+                write!(
+                    f,
+                    "Found ']' at [{}:{}:{}] but no matching '[' found",
+                    file_path.display(),
+                    close_bracket.row(),
+                    close_bracket.col()
+                )
+            }
+            IncompatibleBracket::MissingCloseBracket {
+                file_path,
+                open_bracket,
+            } => {
+                write!(
+                    f,
+                    "Found '[' at [{}:{}:{}] but no matching ']' found",
+                    file_path.display(),
+                    open_bracket.row(),
+                    open_bracket.col()
+                )
+            }
+        }
+    }
+}
+
+impl Error for IncompatibleBracket {}
 
 #[cfg(test)]
 mod tests {
