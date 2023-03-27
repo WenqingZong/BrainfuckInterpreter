@@ -1,2 +1,9 @@
 # BrainfuckInterpreter
-A Brainfuck interpreter, implemented in Rust as a starting point into Rust world.
+```rust
+cargo run -- --program=<path/to/Brainfuck/source/file>
+```
+
+For getting help:
+```rust
+cargo run -- --help
+```
