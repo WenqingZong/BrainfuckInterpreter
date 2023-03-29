@@ -1,5 +1,6 @@
 use bf_interp::VM;
 use clap::Parser;
+use std::io::{stdin, stdout};
 use std::process::ExitCode;
 
 mod cli;
@@ -7,8 +8,8 @@ mod cli;
 fn run_bf(args: cli::Args) -> Result<(), Box<dyn std::error::Error>> {
     let program = bf_types::Program::from_file(args.program)?;
     program.validate()?;
-    let virtual_machine: VM<u8> = VM::new(args.cells, args.extensible);
-    virtual_machine.interpret(&program);
+    let mut virtual_machine: VM<u8> = VM::new(args.cells, args.extensible, &program);
+    virtual_machine.interpret(&mut stdin(), &mut stdout())?;
     Ok(())
 }
 

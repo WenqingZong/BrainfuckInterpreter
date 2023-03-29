@@ -146,7 +146,7 @@ impl Instruction {
 
 impl Program {
     /// Creates a Brainfuck [Program] with a file name in a path-like format and its content in a string-like format.
-    fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Self {
+    pub fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Self {
         let mut instructions: Vec<Instruction> = Vec::new();
         let lines = lines.split('\n');
         for (row, line) in lines.enumerate() {
