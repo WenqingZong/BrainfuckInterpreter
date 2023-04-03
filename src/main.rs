@@ -18,7 +18,7 @@ fn run_bf(args: cli::Args) -> Result<(), Box<dyn std::error::Error>> {
 /// ```shell
 /// # For get more detailed help with this tool.
 /// cargo run -- --help
-/// 
+///
 /// # For actually interpret a Brainfuck program.
 /// cargo run -- --program=./hello_world.bf
 /// ```
