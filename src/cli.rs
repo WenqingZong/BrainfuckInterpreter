@@ -6,7 +6,6 @@ use std::{num::NonZeroUsize, path::PathBuf};
 #[command(author, version, about, long_about = None)]
 pub(crate) struct Args {
     /// The path to Brainfuck source file.
-    #[arg(short, long, required = true)]
     pub(crate) program: PathBuf,
 
     /// Number of cells in Brainfuck virtual machine memory.

@@ -50,7 +50,7 @@ pub struct Program {
 }
 
 /// A representation for errors caused by incompatible brackets in Brainfuck source code.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum IncompatibleBracket {
     /// A close bracket has no corresponding open bracket.
     MissingOpenBracket {
@@ -193,12 +193,6 @@ impl Program {
                 stack.push(ins);
             } else if ins.raw_instruction() == RawInstruction::EndLoop {
                 if stack.is_empty() {
-                    eprintln!(
-                        "Found ']' at [{}:{}:{}], but no matching '[' found",
-                        self.file_path().display(),
-                        ins.row(),
-                        ins.col()
-                    );
                     return Err(IncompatibleBracket::MissingOpenBracket {
                         file_path: self.file_path().to_owned(),
                         close_bracket: *ins,
@@ -207,11 +201,10 @@ impl Program {
                 stack.pop();
             }
         }
-        if !stack.is_empty() {
-            let ins = stack.pop().unwrap();
+        if let Some(ins) = stack.first() {
             return Err(IncompatibleBracket::MissingCloseBracket {
                 file_path: self.file_path().to_owned(),
-                open_bracket: *ins,
+                open_bracket: **ins,
             });
         }
         Ok(())
@@ -358,5 +351,46 @@ mod tests {
             }
         }
         Ok(())
+    }
+
+    /// Should identify unclosed open in Brainfuck source code.
+    #[test]
+    fn should_identify_unclosed_open() {
+        let program = Program::new("", "[[[]");
+        let result = program.validate();
+
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            IncompatibleBracket::MissingCloseBracket {
+                file_path: "".into(),
+                open_bracket: Instruction::new(1, 1, RawInstruction::BeginLoop)
+            }
+        );
+    }
+
+    /// Should identify unopened close in Brainfuck source code.
+    #[test]
+    fn should_identify_unopened_close() {
+        let program = Program::new("", "]");
+        let result = program.validate();
+
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            IncompatibleBracket::MissingOpenBracket {
+                file_path: "".into(),
+                close_bracket: Instruction::new(1, 1, RawInstruction::EndLoop)
+            }
+        );
+    }
+
+    /// Should identify matching brackets in Brainfuck source code.
+    #[test]
+    fn should_identify_matching_brackets() {
+        let program = Program::new("", "[][[]]");
+        let result = program.validate();
+
+        assert!(result.is_ok());
     }
 }
