@@ -15,10 +15,10 @@ fn run_bf(args: cli::Args) -> Result<(), Box<dyn std::error::Error>> {
 /// The entry point for Brainfuck Interpreter. The program has a modern CLI, which contains everything you should know.
 /// # Example:
 /// ```shell
-/// # For get more detailed help with this tool.
+/// # To get more detailed help with this tool.
 /// cargo run -- --help
 ///
-/// # For actually interpret a Brainfuck program.
+/// # To actually interpret a Brainfuck program.
 /// cargo run -- ./hello_world.bf
 /// ```
 fn main() -> ExitCode {
