@@ -1,0 +1,67 @@
+name: Rust CI
+on:
+  push:
+    paths:
+      - src/*
+      - bf_interp/*
+      - bf_types/*
+env:
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  code_quality_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: cargo check
+        run: cargo check --all
+
+      - name: cargo fmt check
+        run: cargo fmt --all --check
+
+      - name: cargo test
+        run: cargo test --all
+
+      - name: cargo clippy check
+        run: cargo clippy --all --all-targets --all-features
+
+  code_coverage:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Generate code coverage
+        run: cargo tarpaulin --verbose --all-features --all --out=Xml
+
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v1
+
+  docs:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [code_quality_check]
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Docs
+        run: cargo doc --all --no-deps
+
+      - name: Make index.html a link to help.html
+        run: cd target/doc && ln -s help.html index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: target/doc
+
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v1
