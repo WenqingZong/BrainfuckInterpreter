@@ -100,11 +100,7 @@ where
         if self.pointer == 0 {
             return Err(BrainfuckRuntimeError::CannotMoveLeftError(
                 self.program.file_path().to_owned(),
-                *self
-                    .program
-                    .instructions()
-                    .get(self.program_counter)
-                    .unwrap(),
+                self.program.instructions()[self.program_counter],
             ));
         }
         self.pointer -= 1;
@@ -120,11 +116,7 @@ where
         if self.pointer == memory_size - 1 && !self.can_extend {
             return Err(BrainfuckRuntimeError::CannotMoveRightError(
                 self.program.file_path().to_owned(),
-                *self
-                    .program
-                    .instructions()
-                    .get(self.program_counter)
-                    .unwrap(),
+                self.program.instructions()[self.program_counter],
             ));
         } else if self.pointer == memory_size - 1 {
             self.memory.resize(2 * memory_size, T::zero());
@@ -144,22 +136,16 @@ where
         self.memory[self.pointer].decrement();
     }
 
-    /// Read a u8 value from user specified reading source.
+    /// Read a u8 value from user specified reading source. Anything beyond a byte-long would be ignored.
     fn read_value<R: Read>(&mut self, input_source: &mut R) -> Result<(), BrainfuckRuntimeError> {
         let mut buf = [0; 1];
-        let result = input_source.read_exact(&mut buf);
-
-        if let Err(e) = result {
-            return Err(BrainfuckRuntimeError::CannotReadInputError(
+        input_source.read_exact(&mut buf).map_err(|e| {
+            BrainfuckRuntimeError::CannotReadInputError(
                 e,
                 self.program.file_path().to_owned(),
-                *self
-                    .program
-                    .instructions()
-                    .get(self.program_counter)
-                    .unwrap(),
-            ));
-        }
+                self.program.instructions()[self.program_counter],
+            )
+        })?;
 
         self.memory[self.pointer].set_value(buf[0]);
 
@@ -172,19 +158,14 @@ where
         write_destination: &mut W,
     ) -> Result<(), BrainfuckRuntimeError> {
         let value = self.memory()[self.pointer].get_value();
-        let result = write_destination.write_all(&[value]);
-
-        if let Err(e) = result {
-            return Err(BrainfuckRuntimeError::CannotWriteOutputError(
+        write_destination.write_all(&[value]).map_err(|e| {
+            BrainfuckRuntimeError::CannotWriteOutputError(
                 e,
                 self.program.file_path().to_owned(),
-                *self
-                    .program
-                    .instructions()
-                    .get(self.program_counter)
-                    .unwrap(),
-            ));
-        }
+                self.program.instructions()[self.program_counter],
+            )
+        })?;
+
         Ok(())
     }
 
@@ -300,6 +281,30 @@ mod tests {
 
         assert!(result.is_ok());
         assert_eq!(virtual_machine.memory()[0], 1_u8);
+    }
+
+    /// Should maintain cell value if its already the max value.
+    #[test]
+    fn maintain_at_max() {
+        let program = Program::new("", "+");
+        let mut virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(2).unwrap(), false, &program);
+        virtual_machine.memory[0] = 255_u8;
+        let result = virtual_machine.interpret(&mut stdin(), &mut stdout());
+
+        assert!(result.is_ok());
+        assert_eq!(virtual_machine.memory[0], 255_u8);
+    }
+
+    /// Should maintain cell value if its already the min value.
+    #[test]
+    fn maintain_at_min() {
+        let program = Program::new("", "-");
+        let mut virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(2).unwrap(), false, &program);
+        virtual_machine.memory[0] = 0_u8;
+        let result = virtual_machine.interpret(&mut stdin(), &mut stdout());
+
+        assert!(result.is_ok());
+        assert_eq!(virtual_machine.memory[0], 0_u8);
     }
 
     /// Should decrement cell value by one.
