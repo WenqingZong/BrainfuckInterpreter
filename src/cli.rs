@@ -8,7 +8,7 @@ pub(crate) struct Args {
     /// The path to Brainfuck source file.
     pub(crate) program: PathBuf,
 
-    /// Number of cells in Brainfuck virtual machine memory.
+    /// Number of cells in Brainfuck virtual machine memory, default to 30,000.
     #[arg(short, long, default_value = "30000")]
     pub(crate) cells: NonZeroUsize,
 

@@ -50,7 +50,7 @@ pub struct Program {
 }
 
 /// A representation for errors caused by incompatible brackets in Brainfuck source code.
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum IncompatibleBracket {
     /// A close bracket has no corresponding open bracket.
     MissingOpenBracket {
@@ -146,7 +146,7 @@ impl Instruction {
 
 impl Program {
     /// Creates a Brainfuck [Program] with a file name in a path-like format and its content in a string-like format.
-    fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Self {
+    pub fn new<P: AsRef<Path>>(file_path: P, lines: &str) -> Self {
         let mut instructions: Vec<Instruction> = Vec::new();
         let lines = lines.split('\n');
         for (row, line) in lines.enumerate() {
@@ -360,13 +360,19 @@ mod tests {
         let result = program.validate();
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(),
-            IncompatibleBracket::MissingCloseBracket {
-                file_path: "".into(),
-                open_bracket: Instruction::new(1, 1, RawInstruction::BeginLoop)
+        match result {
+            Err(IncompatibleBracket::MissingCloseBracket {
+                file_path,
+                open_bracket,
+            }) => {
+                assert_eq!(file_path.to_str().unwrap(), "");
+                assert_eq!(
+                    open_bracket,
+                    Instruction::new(1, 1, RawInstruction::BeginLoop)
+                );
             }
-        );
+            _ => panic!("Unrecognized error"),
+        }
     }
 
     /// Should identify unopened close in Brainfuck source code.
@@ -376,13 +382,19 @@ mod tests {
         let result = program.validate();
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(),
-            IncompatibleBracket::MissingOpenBracket {
-                file_path: "".into(),
-                close_bracket: Instruction::new(1, 1, RawInstruction::EndLoop)
+        match result {
+            Err(IncompatibleBracket::MissingOpenBracket {
+                file_path,
+                close_bracket,
+            }) => {
+                assert_eq!(file_path.to_str().unwrap(), "");
+                assert_eq!(
+                    close_bracket,
+                    Instruction::new(1, 1, RawInstruction::EndLoop)
+                );
             }
-        );
+            _ => panic!("Unrecognized error"),
+        }
     }
 
     /// Should identify matching brackets in Brainfuck source code.
