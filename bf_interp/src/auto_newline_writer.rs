@@ -66,4 +66,16 @@ mod tests {
         drop(auto_newline_writer);
         assert_eq!(writer.into_inner(), vec![b'a', b'\n']);
     }
+
+    /// Should not add a new line if the last character is already a new line character.
+    #[test]
+    fn should_not_add_newline_after_a_newline() {
+        let mut writer: Cursor<Vec<u8>> = Cursor::new(vec![]);
+        let mut auto_newline_writer = AutoNewlineWriter::new(&mut writer);
+        let buf = &[b'\n'];
+        let _ = auto_newline_writer.write(buf);
+
+        drop(auto_newline_writer);
+        assert_eq!(writer.into_inner(), vec![b'\n']);
+    }
 }
