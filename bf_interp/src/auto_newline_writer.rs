@@ -47,6 +47,7 @@ impl<W: Write> Drop for AutoNewlineWriter<W> {
         if !self.last_written_char_is_newline {
             let _ = self.write(&[b'\n']);
         }
+        let _ = self.flush();
     }
 }
 

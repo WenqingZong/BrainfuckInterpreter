@@ -119,7 +119,7 @@ where
                 RawInstruction::Output => self.write_value(&mut auto_newline_writer),
                 RawInstruction::BeginLoop => self.begin_loop(),
                 RawInstruction::EndLoop => self.end_loop(),
-            }?
+            }?;
         }
         Ok(())
     }
@@ -193,7 +193,15 @@ where
         write_destination: &mut W,
     ) -> Result<usize, BrainfuckRuntimeError> {
         let value = self.memory()[self.pointer].get_value();
-        write_destination.write_all(&[value]).map_err(|e| {
+        write_destination.write(&[value]).map_err(|e| {
+            BrainfuckRuntimeError::CannotWriteOutputError(
+                e,
+                self.program.file_path().to_owned(),
+                self.program.instructions()[self.program_counter],
+            )
+        })?;
+
+        write_destination.flush().map_err(|e| {
             BrainfuckRuntimeError::CannotWriteOutputError(
                 e,
                 self.program.file_path().to_owned(),
@@ -337,28 +345,28 @@ mod tests {
         assert_eq!(virtual_machine.memory()[0], 1_u8);
     }
 
-    /// Should maintain cell value if its already the max value.
+    /// Should go beyond upper bound if cell value is already max.
     #[test]
-    fn maintain_at_max() {
+    fn go_beyond_upper_bound() {
         let program = Program::new("", "+");
         let mut virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(2).unwrap(), false, &program);
         virtual_machine.memory[0] = 255_u8;
         let result = virtual_machine.interpret(&mut stdin(), &mut stdout());
 
         assert!(result.is_ok());
-        assert_eq!(virtual_machine.memory[0], 255_u8);
+        assert_eq!(virtual_machine.memory[0], 0_u8);
     }
 
-    /// Should maintain cell value if its already the min value.
+    /// Should go beyond lower bound if cell value is already min.
     #[test]
-    fn maintain_at_min() {
+    fn go_beyond_lower_bound() {
         let program = Program::new("", "-");
         let mut virtual_machine: VM<u8> = VM::new(NonZeroUsize::new(2).unwrap(), false, &program);
         virtual_machine.memory[0] = 0_u8;
         let result = virtual_machine.interpret(&mut stdin(), &mut stdout());
 
         assert!(result.is_ok());
-        assert_eq!(virtual_machine.memory[0], 0_u8);
+        assert_eq!(virtual_machine.memory[0], 255_u8);
     }
 
     /// Should decrement cell value by one.
