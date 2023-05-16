@@ -28,6 +28,8 @@ pub trait CellKind: AddAssign + SubAssign + PartialOrd + Sized + Clone {
     fn increment(&mut self) {
         if self < &mut CellKind::max() {
             *self += CellKind::one();
+        } else {
+            *self = CellKind::min();
         }
     }
 
@@ -35,6 +37,8 @@ pub trait CellKind: AddAssign + SubAssign + PartialOrd + Sized + Clone {
     fn decrement(&mut self) {
         if self > &mut CellKind::min() {
             *self -= CellKind::one();
+        } else {
+            *self = CellKind::max();
         }
     }
 }
